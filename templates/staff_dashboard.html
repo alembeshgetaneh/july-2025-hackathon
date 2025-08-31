@@ -1,0 +1,183 @@
+{% extends '_header.html' %}
+{% block content %}
+<link rel="stylesheet" href="/static/style.css">
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <button class="btn btn-outline-secondary w-100 mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#staffSidebar" aria-expanded="false" aria-controls="staffSidebar">
+                <span class="navbar-toggler-icon"></span> Staff Actions
+            </button>
+            <div class="collapse" id="staffSidebar">
+                <div class="list-group mb-4">
+                    <a href="/staff/profile" class="list-group-item list-group-item-action">My Profile</a>
+                    <a href="/staff/update_credentials" class="list-group-item list-group-item-action">Change Credentials</a>
+                </div>
+            </div>
+        </div>
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h1 class="mb-0">Staff Dashboard</h1>
+                    <span class="fs-5 text-muted">Welcome, <span class="text-primary">{{ staff }}</span></span>
+                </div>
+                <div>
+                    <a href="/" class="btn btn-outline-primary me-2">Home</a>
+                    <a href="/staff/logout" class="btn btn-outline-danger">Logout</a>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm mb-2">
+                        <div class="card-body">
+                            <h5 class="card-title">Total in Queue</h5>
+                            <p class="display-6">{{ total_queue }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm mb-2">
+                        <div class="card-body">
+                            <h5 class="card-title">Elderly/Disabled</h5>
+                            <p class="display-6 text-danger">{{ elderly_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm mb-2">
+                        <div class="card-body">
+                            <h5 class="card-title">Normal</h5>
+                            <p class="display-6 text-secondary">{{ normal_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm mb-2">
+                        <div class="card-body">
+                            <h5 class="card-title">Average Wait Time</h5>
+                            <p class="display-6 text-info">{{ average_wait_time }} min</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if queue and queue|length > 0 %}
+                <div class="alert alert-info text-center mb-4" style="margin-top: 20px;">
+                    <strong>Now Serving:</strong>
+                    <span class="display-6 text-success">{{ queue[0].name }}</span>
+                    <span class="ms-2">({{ queue[0].cert_type }})</span>
+                    {% if queue[0].priority == 'priority' %}
+                        <span class="badge bg-danger ms-2">Priority</span>
+                    {% endif %}
+                </div>
+            {% endif %}
+            <div class="card p-3 mb-4 shadow-sm">
+                <h3 class="mb-3">Current Queue</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle" aria-label="Current Queue">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Priority</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for person in queue %}
+                            <tr{% if person.on_hold %} class="table-warning"{% endif %}>
+                                <td>{{ person.name }}</td>
+                                <td>{{ person.cert_type }}</td>
+                                <td>
+                                    {% if person.priority == 'priority' %}<span class="badge bg-danger" aria-label="Priority">Priority</span>{% else %}<span class="badge bg-secondary" aria-label="Normal">Normal</span>{% endif %}
+                                    {% if person.on_hold %}<span class="badge bg-warning ms-2">On Hold</span>{% endif %}
+                                </td>
+                                <td>{{ person.appointment_date }}</td>
+                                <td>
+                                    <form method="POST" action="/staff" class="d-inline" aria-label="Skip {{ person.name }}">
+                                        <input type="hidden" name="skip_id" value="{{ person.id }}">
+                                        <button type="submit" class="btn btn-warning btn-sm" aria-label="Skip">Skip</button>
+                                    </form>
+                                    <form method="POST" action="/staff" class="d-inline" aria-label="Hold {{ person.name }}">
+                                        <input type="hidden" name="hold_id" value="{{ person.id }}">
+                                        <button type="submit" class="btn btn-secondary btn-sm" aria-label="Hold">Hold</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="5" class="text-center">No one in queue.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-6">
+                    <div class="card p-3 shadow-sm text-center">
+                        <h3>Queue Summary</h3>
+                        <p>Total in queue: <span id="total_queue">{{ total_queue }}</span></p>
+                        <p>Elderly/Disabled: <span id="elderly_count">{{ elderly_count }}</span></p>
+                        <p>Normal: <span id="normal_count">{{ normal_count }}</span></p>
+                    </div>
+                </div>
+            </div>
+            <!-- Remove buttons from main area, handled by header/sidebar -->
+            </div>
+{% endblock %}
+{% include '_footer.html' %}
+<script>
+// Ensure sidebar hamburger toggles content
+document.addEventListener('DOMContentLoaded', function() {
+        var sidebarBtn = document.querySelector('[data-bs-target="#staffSidebar"]');
+        var sidebar = document.getElementById('staffSidebar');
+        if (sidebarBtn && sidebar) {
+                sidebarBtn.addEventListener('click', function() {
+                        sidebar.classList.toggle('show');
+                });
+        }
+});
+</script>
+<script>
+// Live queue update every 10 seconds
+function fetchQueue() {
+    fetch('/staff/dashboard?ajax=1')
+        .then(response => response.json())
+        .then(data => {
+            // Update queue table
+            let table = document.querySelector('table');
+            if (!table) return;
+            let rows = '<tr><th>Name</th><th>Type</th><th>Priority</th><th>Date</th><th>Time</th><th>Actions</th></tr>';
+            if (data.queue.length === 0) {
+                rows += '<tr><td colspan="6">No one in queue.</td></tr>';
+            } else {
+                data.queue.forEach(function(person) {
+                    rows += `<tr>
+                        <td>${person.name}</td>
+                        <td>${person.cert_type}</td>
+                        <td>${person.priority === 'priority' ? '<span style=\"color:red;\">Priority</span>' : 'Normal'}</td>
+                        <td>${person.appointment_date || ''}</td>
+                        <td>${person.appointment_time || ''}</td>
+                        <td>
+                            <form method='POST' action='/staff' style='display:inline;'>
+                                <input type='hidden' name='skip_id' value='${person.id}'>
+                                <button type='submit' class='btn btn-warning btn-sm'>Skip</button>
+                            </form>
+                            <form method='POST' action='/staff' style='display:inline;'>
+                                <input type='hidden' name='hold_id' value='${person.id}'>
+                                <button type='submit' class='btn btn-secondary btn-sm'>Hold</button>
+                            </form>
+                        </td>
+                    </tr>`;
+                });
+            }
+            table.innerHTML = rows;
+            // Update summary
+            document.getElementById('total_queue').textContent = data.total_queue;
+            document.getElementById('elderly_count').textContent = data.elderly_count;
+            document.getElementById('normal_count').textContent = data.normal_count;
+        });
+}
+setInterval(fetchQueue, 10000);
+</script>
+// ...existing code...

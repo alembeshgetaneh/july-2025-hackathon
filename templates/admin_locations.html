@@ -1,0 +1,52 @@
+{% extends '_header.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Manage Woreda/Kebele Locations</h2>
+    {% if message %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endif %}
+    {% if errors %}
+        <div class="alert alert-danger">
+            <ul>
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    <form method="POST" class="mb-4">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control", placeholder="Enter new location name") }}
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Add Location</button>
+    </form>
+    <h4>Existing Locations</h4>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Location Name</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loc in locations %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ loc.name }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_location') }}" style="display:inline;">
+                        <input type="hidden" name="location_id" value="{{ loc.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this location?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+{% endblock %}
+{% include '_footer.html' %}

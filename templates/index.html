@@ -1,0 +1,90 @@
+    {% include '_header.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woreda Queue System</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+        <div class="container py-4" id="main-content" tabindex="-1">
+            <h1 class="text-center mb-3">Welcome to Your Woreda Digital Certification Portal</h1>
+            <p class="text-center">Easily book your appointment for vital records certification—including birth, marriage, divorce, death, and other official documents. Receive real-time updates on your queue position. Our system ensures fairness, privacy, and priority for elderly and vulnerable citizens.</p>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card p-4 shadow-sm">
+                        {% if errors and errors|length > 0 %}
+                            <div class="alert alert-danger mb-3">
+                                <ul class="mb-0">
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        <h3 class="text-center mb-3">Book Your Appointment</h3>
+                        <!-- Certification types are listed in the form dropdown -->
+                        <form method="POST" aria-label="Booking Form">
+                            {{ form.hidden_tag() }}
+                            {% for field in form if field.type != 'CSRFToken' and field.name != 'appointment_time' %}
+                                <div class="mb-3">
+                                    {{ field.label(class="form-label") }}
+                                    {% if field.name == 'woreda' %}
+                                        {{ field(class="form-select", aria_required="true", aria_label=field.label.text) }}
+                                    {% else %}
+                                        {{ field(class="form-control", aria_required="true", aria_label=field.label.text) }}
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger small" role="alert">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary w-100" aria-label="Book Slot">Book Slot</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% if queue_number %}
+        <div class="container text-center mt-4">
+            <div class="alert alert-success">
+                <h2>Your Queue Number: {{ queue_number }}</h2>
+                <p>Estimated wait time: {{ queue_number * 5 }} minutes</p>
+                <p>Please collect your certificate at <strong>{{ form.woreda.data }}</strong> office on your appointment day.</p>
+                <p>Please wait for your turn.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <hr style="margin:40px 0;">
+    <div class="container mt-5">
+        <h2 class="text-center mb-3">Leave Feedback</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-4 shadow-sm">
+                    <form method="POST" aria-label="Feedback Form">
+                        {{ feedback_form.hidden_tag() }}
+                        {% for field in feedback_form if field.type != 'CSRFToken' %}
+                            <div class="mb-3">
+                                {{ field.label(class="form-label") }}
+                                {{ field(class="form-control", aria_required="true", aria_label=field.label.text) }}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small" role="alert">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-success w-100" aria-label="Submit Feedback">Submit Feedback</button>
+                    </form>
+                    {% if feedback_sent %}
+                        <div class="alert alert-success mt-3 text-center" role="status">Thank you for your feedback!</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include '_footer.html' %}
+</body>
+</html>
