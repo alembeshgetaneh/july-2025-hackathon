@@ -35,8 +35,8 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
 
 # Admin credentials (for demo)
-ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'admin123'
+ADMIN_USERNAME = 'alembesh'
+ADMIN_PASSWORD = 'alembesh@2876'
 
 # Staff accounts (for demo, in-memory)
 
